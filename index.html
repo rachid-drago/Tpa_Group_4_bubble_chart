@@ -12,7 +12,7 @@
 </head>
 
 <body>
-    <div id="my_dataviz"></div>
+    <div id="my_chart"></div>
 
     <div class="flex-container">
         <div class="item1">
@@ -112,19 +112,18 @@
                     <option value="puissance">Puissance</option>
                     <option value="BonusMalus">Bonus et Malus</option>
                     <option value="CoutEnergie">Coût d'Energie</option>
-                    <option value="nbPortes">Nombre de Portes</option>
+                    
                 </select>
 
             <p><span><label for="x-axis">Selectionnez l'axe x :</label></span>
 
                 <select id="x-value">
+                    <option value="nb_voiture">Nombre de voitures</option>
                     <option value="puissance">Puissance</option>
                     <option value="RejetsCO2">Rejets CO2</option>
                     <option value="BonusMalus">Bonus et Malus</option>
                     <option value="CoutEnergie">Coût d'Energie</option>
-                    <option value="nbPortes">Nombre de Portes</option>
-                    <option value="nb_voiture">Nombre de voitures</option>
-
+                    
                 </select>
 
             <p><button class="button" onclick="setGraph()"><span>Valider</span></button>
@@ -152,7 +151,7 @@
                 height = 500 - margin.top - margin.bottom;
 
             // append the svg object to the body of the page
-            const svg = d3.select("#my_dataviz")
+            const svg = d3.select("#my_chart")
                 .append("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
@@ -160,19 +159,14 @@
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
             //load data
-            d3.csv("df999withoutNa.csv")
-
-                .then(function (data) {
+            d3.csv("data.csv").then(function (data) {
 
 
-                    // A function that update the chart
+                    // A function that updates the chart
                     function update(selectedGroup) {
+                     // Create new data with the selection
 
-
-
-                        // Create new data with the selection?
-
-                        const dataFilter = data.map(function (d) { return { value: d[selectedGroup], puissance: d.puissance, nb_voiture: d[selectedGroup], marque: d.marque, nom: d.nom, categorie: d.categorie } })
+                        const dataFilter = data.map(function (d) { return { value: d[selectedGroup], puissance: d.puissance, nb_voiture: d[selectedGroup], marque: d.marque, nom: d.nom, categorie: d.categorie, RejetsCO2: d.RejetsCO2,BonusMalus: d.BonusMalus,nbPortes: d.nbPortes,CoutEnergie: d.CoutEnergie } })
 
                         xVal = function (d) { return +d[selectedGroup]; }
                         var max = d3.max(data, xVal) + 1
@@ -202,9 +196,11 @@
                         //update($('#age').val())
                         update(selectedOption)
                     })
+                    //filters for color, sexe ,nbenfants...
                     d3.select("#Familiale").on("change", function (event, d) {
                         let selectedOption = d3.select(this).property("value")
                         update(selectedOption)
+                    
                     })
                     d3.select("#sexe").on("change", function (event, d) {
                         let selectedOption = d3.select(this).property("value")
@@ -315,7 +311,7 @@
                         .style("text-decoration", "underline")
                         .style("font-size", "40px")
                         .style("font-weight", "bold")
-                        .text(xText + " en fonction de  " + yText);
+                        .text(xText + " VS  " + yText);
 
                     // Add a scale for bubble color
                     const myColor = d3.scaleOrdinal()
@@ -323,7 +319,7 @@
                         .range(d3.schemeSet2);
 
                     // -1- Create a tooltip div that is hidden by default:
-                    const tooltip = d3.select("#my_dataviz")
+                    const tooltip = d3.select("#my_chart")
                         .append("div")
                         .style("opacity", 0)
                         .attr("class", "tooltip")
@@ -332,6 +328,7 @@
                         .style("padding", "10px")
                         .style("color", "white")
                         .style("position", "absolute")
+                        
 
                     // -2- Create 3 functions to show / update (when mouse move but stay on same circle) / hide the tooltip
                     const showTooltip = function (event, d) {
@@ -341,15 +338,18 @@
                             .duration(200)
                         tooltip
                             .style("opacity", 0.5)
-                            .html("puissance: " + d.puissance + "<br><hr>" +
-                                " Prix: " + d.prix + "<br>" +
+                            .html(" Puissance: " + d.puissance + "<br>" +
                                 "Nb_voiture_vendu: " + d.nb_voiture + "<br>" +
                                 "Categorie: " + d.categorie + "<br>" +
                                 "Marque : " + d.marque + "<br>" +
-                                "Nom : " + d.nom + "<br>"
+                                "RejetsCO2 : " + d.RejetsCO2 + "<br>"+
+                                "BonusMalus : " + d.BonusMalus + "<br>"+
+                                "nbPortes : " + d.nbPortes + "<br>"+
+                                 "CoutEnergie : " + d.CoutEnergie 
+
                             )
                             .style("left", (event.x) / 2 + "px")
-                            .style("top", (event.y) / 2 + 30 + "px")
+                           .style("top", (event.y) / 2 + 30 + "px")
                     }
                     const moveTooltip = function (event, d) {
                         tooltip
@@ -396,7 +396,8 @@
                         .attr("cy", yMap)
                         .attr("r", d => z(d.nb_voiture))
                         .style("fill", d => myColor(d.categorie))
-                        // -3- Trigger the functions
+
+                    // -3- Trigger the functions
                         .on("mouseover", showTooltip)
                         .on("mousemove", moveTooltip)
                         .on("mouseleave", hideTooltip)
